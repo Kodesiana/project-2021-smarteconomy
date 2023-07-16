@@ -1,0 +1,57 @@
+version: "3.8"
+
+networks:
+  smarteconomy:
+
+volumes:
+  mysql:
+
+services:
+  mariadb:
+    image: mariadb:11
+    cap_add:
+      - SYS_NICE
+    restart: always
+    environment:
+      - MYSQL_DATABASE=smart_economy
+      - MYSQL_ROOT_PASSWORD=mauFJcuf5dhRMQrjj
+    # ports:
+    #   - 3306:3306
+    networks:
+      - smarteconomy
+    volumes:
+      - mysql:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d
+
+  backend:
+    build: backend
+    restart: always
+    env_file: backend/.env
+    # ports:
+    #   - 8000:8000
+    networks:
+      - smarteconomy
+    depends_on:
+      - mariadb
+
+  frontend:
+    build: frontend
+    restart: always
+    env_file: frontend/.env
+    # ports:
+    #   - 4000:4000
+    networks:
+      - smarteconomy
+    depends_on:
+      - backend
+
+  reverse_proxy:
+    build: reverse-proxy
+    restart: always
+    ports:
+      - 80:80
+    networks:
+      - smarteconomy
+    depends_on:
+      - backend
+      - frontend

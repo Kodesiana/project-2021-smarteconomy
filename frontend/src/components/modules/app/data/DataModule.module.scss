@@ -1,0 +1,22 @@
+.root {
+    padding: 0;
+    width: 100%;
+    height: 100% !important;
+}
+
+.sidebar {
+    min-width: clamp(200px, 30%, 300px);
+}
+
+.content {
+    flex-grow: 1;
+    height: 100%;
+    background-color:  #E9ECEF;
+}
+
+.button {
+    border: none;
+    border-radius: 8px;
+    justify-content: flex-start;
+    box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.1), 1px 2px 12px rgba(0, 0, 0, 0.08);
+}
