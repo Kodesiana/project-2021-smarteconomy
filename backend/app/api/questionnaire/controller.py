@@ -143,8 +143,7 @@ async def list_all(q: str | None = None,
 
 
 @router.get("/public/questions")
-async def questions(db: Session = Depends(get_db),
-                    _: str = Depends(get_basic_user)):
+async def questions(db: Session = Depends(get_db)):
     # load questions
     with open("./app/data/questions.json", "r") as f:
         # replace villages

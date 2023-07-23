@@ -32,6 +32,7 @@ def preprocess_columns(
     df.columns = map(lambda x: str(x).upper(), df.columns)
 
     # drop all columns that starts with X0_ or DOC_ID
+    df = df.drop(columns=df.filter(regex="_IGNORE"))
     df = df.drop(columns=df.filter(regex="^X0_"))
     df = df.drop(columns=["DOC_ID"])
 

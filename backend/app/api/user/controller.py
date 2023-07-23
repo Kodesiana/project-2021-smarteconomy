@@ -218,7 +218,7 @@ async def delete(id: str,
                             detail="Pengguna tidak ditemukan")
 
     # check if user is protected
-    if user.is_protected:
+    if user.is_protected == 1:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Pengguna tidak dapat dihapus")
 
