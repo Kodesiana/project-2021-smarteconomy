@@ -135,3 +135,4 @@ class RecommendationDto(BaseModel):
     rank: int
     threshold: float
     items: list[RecommendationItem]
+    description: str

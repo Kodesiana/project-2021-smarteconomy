@@ -84,7 +84,7 @@ def rec_quartile(villageId: str, model: list[RecommendationFactors]) -> Recommen
     items.sort(key=lambda x: x.value)
 
     # return data
-    return RecommendationDto(rank=rank, threshold=threshold, items=items)
+    return RecommendationDto(rank=rank, threshold=threshold, items=items, description="TODO")
 
 
 def rec_ime(villageId: str,
@@ -157,4 +157,4 @@ def rec_ime(villageId: str,
     ]
 
     # return data
-    return RecommendationDto(rank=rank, threshold=0, items=items)
+    return RecommendationDto(rank=rank, threshold=0, items=items, description="TODO")
