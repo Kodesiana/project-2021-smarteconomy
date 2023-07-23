@@ -1,7 +1,6 @@
 FROM nginx
 
-WORKDIR /agripen
+WORKDIR /smarteconomy
 
+COPY . .
 COPY ./nginx.conf /etc/nginx/nginx.conf
-COPY ./proxy.conf /etc/nginx/proxy.conf
-COPY ./services.conf /etc/nginx/services.conf

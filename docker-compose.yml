@@ -15,8 +15,8 @@ services:
     environment:
       - MYSQL_DATABASE=smart_economy
       - MYSQL_ROOT_PASSWORD=mauFJcuf5dhRMQrjj
-    # ports:
-    #   - 3306:3306
+    ports:
+      - 3306:3306
     networks:
       - smarteconomy
     volumes:
@@ -26,9 +26,9 @@ services:
   backend:
     build: backend
     restart: always
-    env_file: backend/.env
-    # ports:
-    #   - 8000:8000
+    env_file: backend.env
+    ports:
+      - 8000:8000
     networks:
       - smarteconomy
     depends_on:
@@ -37,9 +37,8 @@ services:
   frontend:
     build: frontend
     restart: always
-    env_file: frontend/.env
-    # ports:
-    #   - 4000:4000
+    ports:
+      - 4000:4000
     networks:
       - smarteconomy
     depends_on:
