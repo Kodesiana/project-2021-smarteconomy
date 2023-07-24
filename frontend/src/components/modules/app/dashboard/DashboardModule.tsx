@@ -6,6 +6,8 @@ import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, Tooltip, YAxis, Le
 import { FeatureStats } from '@/components/elements/feature-stats/FeatureStats';
 
 import * as queries from '@/services/DashboardService/DashboardQueries';
+import { Acl } from "@/components/layout/acl/Acl";
+import { ROLE } from "@/utils/constants";
 
 const AVAILABLE_COLORS = [
     "var(--mantine-color-cyan-6)",
@@ -46,6 +48,14 @@ const DashboardModule = () => {
     const { data: plsNNChart } = queries.usePlsNNChart();
 
     return (
+        <Acl 
+            roles={[
+                ROLE.ADMIN,
+                ROLE.WARGA,
+                ROLE.APARAT,
+                ROLE.PAKAR
+            ]}
+        >
         <div className={styles.container} style={{ backgroundColor: theme.colorScheme === "dark" ? theme.colors.dark[7] : theme.colors.gray[0] }}>
             <div className={styles.hero}>
                 <h1>Selamat Datang di Aplikasi Smart Economy!</h1>
@@ -265,6 +275,7 @@ const DashboardModule = () => {
                 </div>
             </Container>
         </div>
+        </Acl>
     );
 };
 
