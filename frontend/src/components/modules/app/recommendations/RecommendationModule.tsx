@@ -1,10 +1,12 @@
+import { Acl } from "@/components/layout/acl/Acl";
+import { ROLE } from "@/utils/constants";
 import { Outlet } from "@tanstack/react-location";
 
-type Props = {};
-
-const RecommendationModule = (props: Props) => {
+const RecommendationModule = () => {
   return (
-    <Outlet />
+    <Acl roles={[ROLE.ADMIN, ROLE.WARGA, ROLE.APARAT, ROLE.PAKAR]}>
+      <Outlet />
+    </Acl>
   );
 };
 

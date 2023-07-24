@@ -6,6 +6,8 @@ import { useDisclosure, useLocalStorage, useMediaQuery, useToggle } from "@manti
 import { Link } from "@tanstack/react-location";
 import { Buildings, CaretDoubleLeft, CaretDoubleRight, Database, HouseSimple, ListNumbers, MagicWand, TreeStructure, Users } from "phosphor-react";
 import styles from "./Navbar.module.scss";
+import { ROLE } from "@/utils/constants";
+import { Acl } from "@/components/layout/acl/Acl";
 
 export type ProfileInfo = {
     full_name: string;
@@ -44,25 +46,29 @@ interface NavbarLinkProps {
     href?: string;
     onClick?(): void;
     level?: number;
+    roles?: string[];
 }
 
-function NavbarLink({ icon, label, active, isExpanded, links, onClick, level, withExpander }: NavbarLinkProps) {
+function NavbarLink({ icon, label, active, isExpanded, links, onClick, level, withExpander, roles }: NavbarLinkProps) {
+
     const { classes, cx } = useStyles();
     const [opened, toggleOpen] = useToggle();
     const items = (expanded: boolean) => links?.map((item) => (
-        <Link
-            to={`/${item.href}`} key={item.href}
-        >
-            {({ isActive }) => (
-                <NavbarLink
-                    {...item}
-                    level={(level ?? 0) + 1}
-                    key={item.label}
-                    active={isActive}
-                    isExpanded={expanded}
-                />
-            )}
-        </Link>
+        <Acl roles={item?.roles ?? []} key={item.href}>
+            <Link
+                to={`/${item.href}`}
+            >
+                {({ isActive }) => (
+                    <NavbarLink
+                        {...item}
+                        level={(level ?? 0) + 1}
+                        key={item.label}
+                        active={isActive}
+                        isExpanded={expanded}
+                    />
+                )}
+            </Link>
+        </Acl>
     ));
     const Button = <UnstyledButton name={label} className={cx(classes.link, { [classes.active]: active }, styles[`level-${level}`], styles.link, { [styles.active]: active })}
         onClick={() => (links && links.length > 0) ? toggleOpen() : onClick?.()}
@@ -101,44 +107,63 @@ function NavbarLink({ icon, label, active, isExpanded, links, onClick, level, wi
     );
 }
 
-const navList: (role: string) => NavbarLinkProps[] = (role: string) => {
+const navList: () => NavbarLinkProps[] = () => {
     return ([
-        { visible: true, icon: (active: boolean) => <HouseSimple size={24} weight={active ? "fill" : "regular"} />, label: "Dashboard", href: "./app/" },
+        { 
+            icon: (active: boolean) => <HouseSimple size={24} weight={active ? "fill" : "regular"} />, label: "Dashboard", href: "./app/",
+            roles: [ROLE.ADMIN, ROLE.WARGA, ROLE.PAKAR, ROLE.APARAT],
+        },
         {
-            visible: true,
-            icon: (active: boolean) => <Database size={24} weight={active ? "fill" : "regular"} />, label: "Pangkalan Data", links: [
+            icon: (active: boolean) => <Database size={24} weight={active ? "fill" : "regular"} />, label: "Pangkalan Data", 
+            roles: [ROLE.ADMIN, ROLE.WARGA, ROLE.PAKAR],
+            links: [
                 {
-                    visible: ["admin", "warga"].includes(role), label: "Desa", href: "./app/data/desa"
+                    roles: [ROLE.ADMIN], label: "Desa", href: "./app/data/desa"
                 },
                 {
-                    visible: ["admin", "pakar"].includes(role), label: "Kuesioner", href: "./app/data/kuesioner"
+                    roles: [ROLE.ADMIN, ROLE.WARGA], label: "Kuesioner", href: "./app/data/kuesioner"
                 },
                 {
-                    visible: ["admin", "aparat"].includes(role), label: "Kerja Sama", href: "./app/data/kerjasama"
+                    roles: [ROLE.ADMIN, ROLE.PAKAR], label: "Kerja Sama", href: "./app/data/kerjasama"
                 },
                 {
-                    visible: ["admin", "aparat"].includes(role), label: "Infrastruktur", href: "./app/data/infrastruktur"
+                    roles: [ROLE.ADMIN], label: "Infrastruktur", href: "./app/data/infrastruktur"
                 },
                 {
-                    visible: ["admin", "aparat"].includes(role), label: "Investasi", href: "./app/data/investasi"
+                    roles: [ROLE.ADMIN], label: "Investasi", href: "./app/data/investasi"
                 },
             ]
         },
-        { visible: true, icon: (active: boolean) => <TreeStructure size={24} weight={active ? "fill" : "regular"} />, label: "Citizen Science", href: "./app/citizen" },
-        { visible: true, icon: (active: boolean) => <ListNumbers size={24} weight={active ? "fill" : "regular"} />, label: "Kerja Sama", href: "./app/weights" },
-        {
-            visible: ["admin", "aparat"].includes(role),
-            icon: (active: boolean) => <Buildings size={24} weight={active ? "fill" : "regular"} />, label: "Infrastruktur", href: "./app/infra"
+        { 
+            
+            icon: (active: boolean) => <TreeStructure size={24} weight={active ? "fill" : "regular"} />, 
+            label: "Citizen Science", 
+            href: "./app/citizen",
+            roles: [ROLE.ADMIN, ROLE.APARAT, ROLE.PAKAR]
+        },
+        { 
+            visible: true, 
+            icon: (active: boolean) => <ListNumbers size={24} weight={active ? "fill" : "regular"} />, label: "Kerja Sama", 
+            href: "./app/weights", 
+            roles: [ROLE.ADMIN, ROLE.PAKAR]
         },
         {
-            visible: true,
+            icon: (active: boolean) => <Buildings size={24} weight={active ? "fill" : "regular"} />, label: "Infrastruktur", href: "./app/infra",
+            roles: [ROLE.ADMIN, ROLE.PAKAR, ROLE.APARAT],
+        },
+        {
             icon: (active: boolean) => <MagicWand size={24} weight={active ? "fill" : "regular"} />, label: "Rekomendasi",
             links: [
                 { label: "Model Statistik", href: "./app/recomendation/model-stats" },
                 { label: "Model IME", href: "./app/recomendation/model-ime" },
-            ]
+            ],
+            roles: [ROLE.ADMIN, ROLE.PAKAR, ROLE.APARAT, ROLE.WARGA],
         },
-        { visible: true, icon: (active: boolean) => <Users size={24} weight={active ? "fill" : "regular"} />, label: "Pengguna", href: "./app/users" },
+        { 
+            roles: [ROLE.ADMIN], 
+            icon: (active: boolean) => <Users size={24} weight={active ? "fill" : "regular"} />, label: "Pengguna", 
+            href: "./app/users" 
+        },
         // { icon: (active: boolean) => <Info size={24} weight={active ? "fill" : "regular"} />, label: "Tentang", href: "./app/about" },
     ]);
 };
@@ -146,11 +171,11 @@ const navList: (role: string) => NavbarLinkProps[] = (role: string) => {
 export function Navbar() {
     const isMobile = useMediaQuery("(max-width: 768px)");
     const [expanded, toggleExpand] = useToggle([true, false]);
-    const profile: ProfileInfo = localStorage.getItem('profile') && JSON?.parse(localStorage.getItem('profile') ?? "{ 'role': 'warga' }");
 
-    const links = useMemo(() => navList(profile?.role ?? "").filter((n) => n.visible !== undefined && n.visible).map((item) => (
+    const links = useMemo(() => navList()
+    .map((item) => (
         NavLinkItem(item, expanded, true)
-    )), [profile, expanded]);
+    )), [expanded]);
 
     return (
         <>
@@ -198,11 +223,11 @@ export function Navbar() {
 export function BottomNavbar() {
     const isMobile = useMediaQuery("(max-width: 768px)");
     const [opened, { open, close }] = useDisclosure(false);
-    const profile: ProfileInfo = localStorage.getItem('profile') && JSON?.parse(localStorage.getItem('profile') ?? "{ 'role': 'warga' }");
 
-    const links = useMemo(() => navList(profile?.role ?? "").filter((n) => n.visible !== undefined && n.visible).map((item) => (
-        NavLinkItem(item, true, true)
-    )), [profile, true]);
+    const links = useMemo(() => navList()
+        .map((item) => (
+            NavLinkItem(item, true, true)
+        )), [true]);
 
     return (
         <>
@@ -224,19 +249,28 @@ export function BottomNavbar() {
 }
 
 function NavLinkItem(item: NavbarLinkProps, expanded: boolean, expander: boolean): JSX.Element {
+    const { roles = []} = item;
     if (!item.href) {
-        return <NavbarLink {...item} level={1} key={item.label} isExpanded={expanded} withExpander={expander} />;
+        return (
+            <Acl roles={roles}>
+                <NavbarLink {...item} level={1} key={item.label} isExpanded={expanded} withExpander={expander} />
+            </Acl>
+        );
     }
-    return <Link
-        to={item?.href ? `/${item?.href}` : "#"} key={item.href}
-    >
-        {({ isActive }) => (
-            <NavbarLink
-                {...item}
-                level={1}
-                key={item.label}
-                active={isActive}
-                isExpanded={expanded} />
-        )}
-    </Link>;
+    return (
+        <Acl roles={roles}>
+            <Link
+                to={item?.href ? `/${item?.href}` : "#"} key={item.href}
+            >
+                {({ isActive }) => (
+                    <NavbarLink
+                        {...item}
+                        level={1}
+                        key={item.label}
+                        active={isActive}
+                        isExpanded={expanded} />
+                )}
+            </Link>
+        </Acl>
+    );
 }

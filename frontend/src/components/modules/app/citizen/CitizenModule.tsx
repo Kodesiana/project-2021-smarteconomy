@@ -1,10 +1,12 @@
 import dataTable from "@/components/elements/data-table";
 import { useDataTable } from "@/components/elements/data-table/useDataTable";
+import { Acl } from "@/components/layout/acl/Acl";
 import useQuery from "@/hooks/useQuery";
 import { queryClient } from "@/queryClient";
 import { CSParam } from "@/services/AnalysisService/AnalysisInterface";
 import { useGetCitizenScienceData } from "@/services/AnalysisService/AnalysisQueries";
 import { useGetVillagesDropList } from "@/services/VillagesServices/VillagesQueries";
+import { ROLE } from "@/utils/constants";
 import { useMantineTheme, Stack, Container, Card, Group, Select, SegmentedControl, Button, SimpleGrid, Title, Transition, clsx, Overlay, Box } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { ColumnDef } from "@tanstack/react-table";
@@ -28,6 +30,7 @@ const CitizenModule = () => {
     const isMobile = useMediaQuery('(max-width: 768px)');
 
     return (
+        <Acl roles={[ROLE.ADMIN, ROLE.PAKAR, ROLE.APARAT]}>
         <Container fluid>
             <Stack spacing="md">
                 <Card radius="md" shadow="xs" mt={20} style={{ zIndex: 200 }}>
@@ -118,6 +121,7 @@ const CitizenModule = () => {
             </Stack>
 
         </Container>
+        </Acl>
     );
 };
 

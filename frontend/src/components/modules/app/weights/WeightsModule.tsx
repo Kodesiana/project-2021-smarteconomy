@@ -1,7 +1,9 @@
+import { Acl } from "@/components/layout/acl/Acl";
 import { useGetAnalysisCoop } from "@/services/AnalysisService/AnalysisQueries";
 import { useGetCoop, useGetCoopDl } from "@/services/CoopService/CoopQueries";
 import { useGetVillagesDropList } from "@/services/VillagesServices/VillagesQueries";
 import instance from "@/utils/apiClient";
+import { ROLE } from "@/utils/constants";
 import { ActionIcon, Button, Card, Container, Group, Modal, Overlay, Paper, SegmentedControl, Select, SimpleGrid, Space, Text, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { Hash } from "phosphor-react";
@@ -69,96 +71,99 @@ const UsersModule = () => {
         (item: any) => { return { label: item.expertName, value: item.id }; }
     ), [daftarPakar]);
     return (
-        <Container size="xl">
+        <Acl roles={[ROLE.ADMIN, ROLE.PAKAR]}>
+            <Container size="xl">
 
-            <Paper p="md" mt="md" style={{ position: "relative", zIndex: 200 }} >
-                <Group>
-                    <SegmentedControl radius="sm" color="green" onChange={
-                        (val) => {
+                <Paper p="md" mt="md" style={{ position: "relative", zIndex: 200 }} >
+                    <Group>
+                        <SegmentedControl radius="sm" color="green" onChange={
+                            (val) => {
+                                setIsReady(false);
+                                setDetail(val);
+                            }
+                        } data={[
+                            { label: "Detail", value: "kerjaSamaId" },
+                            { label: "Ringkas", value: "villageId" },
+                            { label: "Kecamatan", value: "" },
+                        ]}
+                        />
+                        <Select withAsterisk disabled={detail === ''} data={dataDesa?.map(({ id: value, name: label }: { id: string, name: string; }) => ({ label, value })) ?? []} placeholder="Pilih Desa" onChange={e => {
+                            if (e) {
+                                setIsReady(false);
+                                setVillageId(e);
+                                setPakar("");
+                            }
+                        }} />
+                        <Select value={pakar} placeholder="Pilih pakar" disabled={detail === 'villageId' || detail === ''} w={300} data={pakarOptions ?? []} onChange={(v) => {
                             setIsReady(false);
-                            setDetail(val);
-                        }
-                    } data={[
-                        { label: "Detail", value: "kerjaSamaId" },
-                        { label: "Ringkas", value: "villageId" },
-                        { label: "Kecamatan", value: "" },
-                    ]}
-                    />
-                    <Select withAsterisk disabled={detail === ''} data={dataDesa?.map(({ id: value, name: label }: { id: string, name: string; }) => ({ label, value })) ?? []} placeholder="Pilih Desa" onChange={e => {
-                        if (e) {
-                            setIsReady(false);
-                            setVillageId(e);
-                            setPakar("");
-                        }
-                    }} />
-                    <Select value={pakar} placeholder="Pilih pakar" disabled={detail === 'villageId' || detail === ''} w={300} data={pakarOptions ?? []} onChange={(v) => {
-                        setIsReady(false);
-                        return setPakar(v ?? "");
-                    }} />
+                            return setPakar(v ?? "");
+                        }} />
 
-                    <Button onClick={handleProcess} ml="auto">Proses</Button>
-                </Group>
-            </Paper>
-
-            <Card p="md" mt="md" radius={8}>
-                <Text size={20} weight={600} display="flex" sx={{ justifyItems: 'center' }} color="#495057">
-                    <ActionIcon variant="filled" color="blue" mr={20} sx={{ pointerEvents: 'none' }}>
-                        <Hash weight="bold" />
-                    </ActionIcon>
-                    Consistency Ratio</Text>
-                <Text size={40}>{isReady && hasilPakar?.cr ? hasilPakar?.cr?.toFixed(6) : 0}</Text>
-            </Card>
-            <SimpleGrid cols={isMobile ? 1 : 2} pb="xl">
-                <Paper p="md" mt="md" pb={80} style={{ height: "calc(50vh)" }}>
-                    <Title order={3} mb={24}>Strategi Kerja Sama</Title>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                            width={400}
-                            height={300}
-                            data={(isReady && hasilPakar?.alternatives) ? Object.entries(hasilPakar?.alternatives ?? {}).map(([name, value]) => ({ name: Model?.[name], value })) : []}
-                            margin={{
-                                top: 5,
-                                right: 30,
-                                left: 20,
-                                bottom: 5,
-                            }}
-                        >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis domain={[0, 1]} />
-                            {isReady && <Tooltip content={CustomTooltip} />}
-                            <Bar dataKey="value" fill="var(--mantine-color-green-6)" radius={[16, 16, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                    <Space h="lg" />
+                        <Button onClick={handleProcess} ml="auto">Proses</Button>
+                    </Group>
                 </Paper>
 
-                <Paper p="md" mt="md" pb={80} style={{ height: "calc(50vh)" }}>
-                    <Title order={3} mb={24}>Bobot Faktor</Title>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                            width={400}
-                            height={300}
-                            data={(isReady && hasilPakar?.factors) ? Object.entries(hasilPakar?.factors).map(([name, value]) => ({ name: SchemaBobotFactor?.[name], value })) : []}
-                            margin={{
-                                top: 5,
-                                right: 30,
-                                left: 20,
-                                bottom: 5,
-                            }}
-                        >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis domain={[0, 1]} />
-                            {isReady && <Tooltip content={CustomTooltip} />}
-                            <Bar dataKey="value" fill="var(--mantine-color-green-6)" radius={[16, 16, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                    <Space h="lg" />
-                </Paper>
-            </SimpleGrid>
+                <Card p="md" mt="md" radius={8}>
+                    <Text size={20} weight={600} display="flex" sx={{ justifyItems: 'center' }} color="#495057">
+                        <ActionIcon variant="filled" color="blue" mr={20} sx={{ pointerEvents: 'none' }}>
+                            <Hash weight="bold" />
+                        </ActionIcon>
+                        Consistency Ratio</Text>
+                    <Text size={40}>{isReady && hasilPakar?.cr ? hasilPakar?.cr?.toFixed(6) : 0}</Text>
+                </Card>
+                <SimpleGrid cols={isMobile ? 1 : 2} pb="xl">
+                    <Paper p="md" mt="md" pb={80} style={{ height: "calc(50vh)" }}>
+                        <Title order={3} mb={24}>Strategi Kerja Sama</Title>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                                width={400}
+                                height={300}
+                                data={(isReady && hasilPakar?.alternatives) ? Object.entries(hasilPakar?.alternatives ?? {}).map(([name, value]) => ({ name: Model?.[name], value })) : []}
+                                margin={{
+                                    top: 5,
+                                    right: 30,
+                                    left: 20,
+                                    bottom: 5,
+                                }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis domain={[0, 1]} />
+                                {isReady && <Tooltip content={CustomTooltip} />}
+                                <Bar dataKey="value" fill="var(--mantine-color-green-6)" radius={[16, 16, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                        <Space h="lg" />
+                    </Paper>
 
-        </Container >
+                    <Paper p="md" mt="md" pb={80} style={{ height: "calc(50vh)" }}>
+                        <Title order={3} mb={24}>Bobot Faktor</Title>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                                width={400}
+                                height={300}
+                                data={(isReady && hasilPakar?.factors) ? Object.entries(hasilPakar?.factors).map(([name, value]) => ({ name: SchemaBobotFactor?.[name], value })) : []}
+                                margin={{
+                                    top: 5,
+                                    right: 30,
+                                    left: 20,
+                                    bottom: 5,
+                                }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis domain={[0, 1]} />
+                                {isReady && <Tooltip content={CustomTooltip} />}
+                                <Bar dataKey="value" fill="var(--mantine-color-green-6)" radius={[16, 16, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                        <Space h="lg" />
+                    </Paper>
+                </SimpleGrid>
+
+            </Container >
+        </Acl>
+        
     );
 };
 

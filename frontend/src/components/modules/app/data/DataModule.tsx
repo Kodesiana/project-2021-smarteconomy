@@ -22,6 +22,8 @@ import { queryClient } from "@/queryClient";
 import CoopServices from "@/services/CoopService/CoopServices";
 import VillagesServices from "@/services/VillagesServices/VillagesServices";
 import SearchBar from "@/components/elements/search-bar/SearchBar";
+import { Acl } from "@/components/layout/acl/Acl";
+import { ROLE } from "@/utils/constants";
 
 const decimalFormatter = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 });
 
@@ -306,11 +308,11 @@ const DataModule = () => {
     const { data: { data: dataIV, meta: metaIV }, isFetching: isFetchIV } = useGetInvestasi(stateToKodesiana(state), ID === "investasi");
 
     const dataMap: Record<string, any> = {
-        "desa": { data: dataD, meta: metaD, isFetch: isFetchD },
-        "kuesioner": { data: dataQ, meta: metaQ, isFetch: isFetchQ },
-        "kerjasama": { data: dataP, meta: metaP, isFetch: isFetchP },
-        "infrastruktur": { data: dataI, meta: metaI, isFetch: isFetchI },
-        "investasi": { data: dataIV, meta: metaIV, isFetch: isFetchIV},
+        "desa": { data: dataD, meta: metaD, isFetch: isFetchD, roles: [ROLE.ADMIN] },
+        "kuesioner": { data: dataQ, meta: metaQ, isFetch: isFetchQ, roles: [ROLE.ADMIN, ROLE.WARGA] },
+        "kerjasama": { data: dataP, meta: metaP, isFetch: isFetchP, roles: [ROLE.ADMIN, ROLE.PAKAR] },
+        "infrastruktur": { data: dataI, meta: metaI, isFetch: isFetchI, roles: [ROLE.ADMIN] },
+        "investasi": { data: dataIV, meta: metaIV, isFetch: isFetchIV, roles: [ROLE.ADMIN]},
     };
     const [backfilling, setBackfilling] = useState(false);
     const {
@@ -326,6 +328,7 @@ const DataModule = () => {
         setState,
     });
     return (
+        <Acl roles={dataMap[ID as string].roles}>        
         <TableLayout >
             <TableLayout.Header>
 
@@ -345,6 +348,7 @@ const DataModule = () => {
             </TableLayout.Content>
 
         </TableLayout>
+        </Acl>
     );
 };
 
