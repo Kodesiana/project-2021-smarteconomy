@@ -29,20 +29,20 @@ const ModelStatsModule = () => {
   const { data: dataDesa } = useGetVillagesDropList();
 
   const getRankText = () => {
-      if (!data || !isReady) return "-";
-      if (data.rank === undefined) return "-";
-      if (data.rank === 1) return "Cukup Potensial";
-      if (data.rank === 2) return "Potensial";
-      return "Sangat Potensial";
-    }
+    if (!data || !isReady) return "-";
+    if (data.rank === undefined) return "-";
+    if (data.rank === 1) return "Cukup Potensial";
+    if (data.rank === 2) return "Potensial";
+    return "Sangat Potensial";
+  }
 
-    const getRankColor = () => {
-      if (!data || !isReady) return "gray";
-      if (data.rank === undefined) return "gray";
-      if (data.rank === 1) return "red";
-      if (data.rank === 2) return "yellow";
-      return "green";
-    }
+  const getRankColor = () => {
+    if (!data || !isReady) return "gray";
+    if (data.rank === undefined) return "gray";
+    if (data.rank === 1) return "red";
+    if (data.rank === 2) return "yellow";
+    return "green";
+  }
 
   const chartData = (isReady && data?.values) ?
     Object.entries(data?.values ?? {})
@@ -73,7 +73,7 @@ const ModelStatsModule = () => {
       <SimpleGrid cols={1}>
         <Card radius="md" shadow="xs" p="xl" style={{ height: "140px" }} bg={getRankColor()}>
           <Title order={3} color={"white"}>Potensi Smart Economy</Title>
-          <Text size={40}  color={"white"}>{getRankText()}</Text>
+          <Text size={40} color={"white"}>{getRankText()}</Text>
         </Card>
 
         <Card radius="md" shadow="xs" p="xl" style={{ height: "calc(70vh)" }}>
@@ -92,7 +92,7 @@ const ModelStatsModule = () => {
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name"  angle={-90} textAnchor="end" interval={0}/>
+              <XAxis dataKey="name" angle={-90} textAnchor="end" interval={0} />
               <YAxis domain={[0, 1]} />
               {isReady && <Tooltip content={CustomTooltip} />}
               <Bar dataKey="value" radius={[16, 16, 0, 0]} />
@@ -101,25 +101,32 @@ const ModelStatsModule = () => {
           </ResponsiveContainer>
 
         </Card>
-        {isReady && <Card>
-          <Text size={16} weight={700} color="#495057" mb={8}>Rekomendasi</Text>
-          <List
-            styles={{
-              item: {
-                fontSize: 14,
-              }
-            }}
-          >
-            {
-              data?.recommendations?.map((values: string, i: number) => (
-                <List.Item icon={
-                  values.match(/baik/) ? <Check color={"green"} /> : <WarningCircle color={"orange"} />
-                } key={`${values}-${i}`}>{values}</List.Item>
-              ))
-            }
-          </List>
+        {isReady && (
+          <Stack>
+            <Card>
+              <Text size={16} weight={700} color="#495057" mb={8}>Rekomendasi</Text>
+              <List
+                styles={{
+                  item: {
+                    fontSize: 14,
+                  }
+                }}
+              >
+                {
+                  data?.recommendations?.map((values: string, i: number) => (
+                    <List.Item icon={
+                      values.match(/baik/) ? <Check color={"green"} /> : <WarningCircle color={"orange"} />
+                    } key={`${values}-${i}`}>{values}</List.Item>
+                  ))
+                }
+              </List>
 
-        </Card>}
+            </Card>
+            <Card>
+              <Text size={16} weight={700} color="#495057" mb={8}>Keterangan</Text>
+              {data?.description ?? "-"}
+            </Card>
+          </Stack>)}
       </SimpleGrid>
     </Container>
   );

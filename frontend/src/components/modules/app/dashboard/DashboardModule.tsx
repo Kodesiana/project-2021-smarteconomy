@@ -45,7 +45,7 @@ const DashboardModule = () => {
     const { data: motivationChart } = queries.useMotivationChart();
     const { data: tikChart } = queries.useTIKChart();
     const { data: informationChart } = queries.useInformationChart();
-    const { data: plsNNChart } = queries.usePlsNNChart();
+    // const { data: plsNNChart } = queries.usePlsNNChart();
 
     return (
         <Acl 
@@ -247,7 +247,7 @@ const DashboardModule = () => {
                             </BarChart>
                         </ResponsiveContainer>
                     </Card>
-                    <Card radius="md" p={16} withBorder pb={80} mb={20} style={{ height: 460, width: "100%" }}>
+                    {/* <Card radius="md" p={16} withBorder pb={80} mb={20} style={{ height: 460, width: "100%" }}>
                         <Title order={3} mb={24}>PLS-NN Smart Economy</Title>
                         <ResponsiveContainer className={styles.chart} width="100%" height="100%">
                             <BarChart
@@ -271,7 +271,7 @@ const DashboardModule = () => {
                                 <Bar dataKey="rank_3" name="Sangat Siap" fill="var(--mantine-color-green-6)" />
                             </BarChart>
                         </ResponsiveContainer>
-                    </Card>
+                    </Card> */}
                 </div>
             </Container>
         </div>

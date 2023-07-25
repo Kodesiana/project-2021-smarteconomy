@@ -63,8 +63,22 @@ export const Routes: Route[] = [
                 ]
             },
             {
-                path: "/citizen", element: async () => import("@/components/modules/app/citizen/CitizenModule").then(({ default: Component }) => <Component />),
+                path: "/citizen",
                 meta: { breadcrumb: () => <>Citizen Science</> },
+                children: [
+                    {
+                        path: "/readiness",
+                        element: async () => import("@/components/modules/app/citizen/CitizenModule").then(({ default: Component }) => <Component />),
+                    },
+                    {
+                        path: "/grafik",
+                        element: async () => import("@/components/modules/app/citizen/ChartModule").then(({ default: Component }) => <Component />),
+                        meta: { breadcrumb: () => <>Grafik</> },
+                    },
+                    {
+                        element: <Navigate to="/app/citizen/readiness" />,
+                    }
+                ]
 
             },
             {
@@ -80,14 +94,16 @@ export const Routes: Route[] = [
                 path: "/recomendation", element: async () => import("@/components/modules/app/recommendations/RecommendationModule").then(({ default: Component }) => <Component />),
                 meta: { breadcrumb: () => <>Rekomendasi</> },
                 children: [
-                    {
-                        path: "model-ime",
-                        element: async () => import("@/components/modules/app/recommendations/ModelImeModule").then(({ default: Component }) => <Component />),
-                    },
+                    // {
+                    //     path: "model-ime",
+                    //     element: async () => import("@/components/modules/app/recommendations/ModelImeModule").then(({ default: Component }) => <Component />),
+                    // },
                     {
                         path: "model-stats",
                         element: async () => import("@/components/modules/app/recommendations/ModelStatsModule").then(({ default: Component }) => <Component />),
-
+                    },
+                    {
+                        element: <Navigate to="/app/recomendation/model-stats" />,
                     }
                 ]
             },
