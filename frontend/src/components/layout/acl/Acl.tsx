@@ -16,7 +16,7 @@ export const Acl = ({
   defaultRedirect = "/app/",
 }: AclProps): ReactElement | null => {
 
-  const [{ role: userRole = [] }] = useLocalStorage({ 
+  const [{ role: userRole = [] as Array<String> }] = useLocalStorage({ 
     key: 'profile', 
     defaultValue: {
       role: []
