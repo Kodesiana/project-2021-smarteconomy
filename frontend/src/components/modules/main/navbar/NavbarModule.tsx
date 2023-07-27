@@ -109,12 +109,12 @@ function NavbarLink({ icon, label, active, isExpanded, links, onClick, level, wi
 
 const navList: () => NavbarLinkProps[] = () => {
     return ([
-        { 
+        {
             icon: (active: boolean) => <HouseSimple size={24} weight={active ? "fill" : "regular"} />, label: "Dashboard", href: "./app/",
             roles: [ROLE.ADMIN, ROLE.WARGA, ROLE.PAKAR, ROLE.APARAT],
         },
         {
-            icon: (active: boolean) => <Database size={24} weight={active ? "fill" : "regular"} />, label: "Pangkalan Data", 
+            icon: (active: boolean) => <Database size={24} weight={active ? "fill" : "regular"} />, label: "Pangkalan Data",
             roles: [ROLE.ADMIN, ROLE.WARGA, ROLE.PAKAR],
             links: [
                 {
@@ -134,17 +134,20 @@ const navList: () => NavbarLinkProps[] = () => {
                 },
             ]
         },
-        { 
-            
-            icon: (active: boolean) => <TreeStructure size={24} weight={active ? "fill" : "regular"} />, 
-            label: "Citizen Science", 
-            href: "./app/citizen",
-            roles: [ROLE.ADMIN, ROLE.APARAT, ROLE.PAKAR]
+        {
+
+            icon: (active: boolean) => <TreeStructure size={24} weight={active ? "fill" : "regular"} />,
+            label: "Kesiapan Warga",
+            roles: [ROLE.ADMIN, ROLE.APARAT, ROLE.PAKAR],
+            links: [
+                { roles: [ROLE.ADMIN, ROLE.APARAT, ROLE.PAKAR], label: "Kesiapan Warga", href: "./app/citizen/readiness" },
+                { roles: [ROLE.ADMIN, ROLE.APARAT, ROLE.PAKAR], label: "Grafik", href: "./app/citizen/grafik" },
+            ]
         },
-        { 
-            visible: true, 
-            icon: (active: boolean) => <ListNumbers size={24} weight={active ? "fill" : "regular"} />, label: "Kerja Sama", 
-            href: "./app/weights", 
+        {
+            visible: true,
+            icon: (active: boolean) => <ListNumbers size={24} weight={active ? "fill" : "regular"} />, label: "Kerja Sama",
+            href: "./app/weights",
             roles: [ROLE.ADMIN, ROLE.PAKAR]
         },
         {
@@ -152,17 +155,14 @@ const navList: () => NavbarLinkProps[] = () => {
             roles: [ROLE.ADMIN, ROLE.PAKAR, ROLE.APARAT],
         },
         {
-            icon: (active: boolean) => <MagicWand size={24} weight={active ? "fill" : "regular"} />, label: "Rekomendasi",
-            links: [
-                { label: "Model Statistik", href: "./app/recomendation/model-stats" },
-                { label: "Model IME", href: "./app/recomendation/model-ime" },
-            ],
+            icon: (active: boolean) => <MagicWand size={24} weight={active ? "fill" : "regular"} />, label: "Rekomendasi", href: "./app/recomendation/model-stats",
+            
             roles: [ROLE.ADMIN, ROLE.PAKAR, ROLE.APARAT, ROLE.WARGA],
         },
-        { 
-            roles: [ROLE.ADMIN], 
-            icon: (active: boolean) => <Users size={24} weight={active ? "fill" : "regular"} />, label: "Pengguna", 
-            href: "./app/users" 
+        {
+            roles: [ROLE.ADMIN],
+            icon: (active: boolean) => <Users size={24} weight={active ? "fill" : "regular"} />, label: "Pengguna",
+            href: "./app/users"
         },
         // { icon: (active: boolean) => <Info size={24} weight={active ? "fill" : "regular"} />, label: "Tentang", href: "./app/about" },
     ]);
@@ -173,9 +173,9 @@ export function Navbar() {
     const [expanded, toggleExpand] = useToggle([true, false]);
 
     const links = useMemo(() => navList()
-    .map((item) => (
-        NavLinkItem(item, expanded, true)
-    )), [expanded]);
+        .map((item) => (
+            NavLinkItem(item, expanded, true)
+        )), [expanded]);
 
     return (
         <>
@@ -239,7 +239,7 @@ export function BottomNavbar() {
                             <Drawer opened={opened} onClose={close}>
                                 <Stack spacing={6} p={16}>
                                     {links}
-                                    </Stack>
+                                </Stack>
                             </Drawer>
                         </Flex>
                     </Footer>
@@ -249,7 +249,7 @@ export function BottomNavbar() {
 }
 
 function NavLinkItem(item: NavbarLinkProps, expanded: boolean, expander: boolean): JSX.Element {
-    const { roles = []} = item;
+    const { roles = [] } = item;
     if (!item.href) {
         return (
             <Acl roles={roles}>
