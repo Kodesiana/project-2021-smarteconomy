@@ -13,12 +13,12 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 const apiClient = instance({});
 
 const Model: Record<string, string> = {
-    "aS1": "Pemberdayaan Koperasi",
-    "aS2": "Pemodalan",
-    "aS3": "Pemasaran",
-    "aS4": "Character Building",
-    "aS5": "Capacity Building",
-    "aS6": "Kebijakan",
+    "as1": "Pemberdayaan Koperasi",
+    "as2": "Pemodalan",
+    "as3": "Pemasaran",
+    "as4": "Character Building",
+    "as5": "Capacity Building",
+    "as6": "Kebijakan",
 };
 
 const SchemaBobotFactor: Record<string, string> = {
