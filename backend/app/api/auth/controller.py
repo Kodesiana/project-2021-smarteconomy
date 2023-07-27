@@ -13,8 +13,7 @@ router = APIRouter()
 
 
 @router.post("/login", response_model=LoginDto)
-async def login(model: LoginModel,
-                db: Session = Depends(get_db)):
+async def login(model: LoginModel, db: Session = Depends(get_db)):
     # find user
     user: User = db.query(User).filter(User.username == model.username).first()
 

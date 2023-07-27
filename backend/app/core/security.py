@@ -12,8 +12,7 @@ ALGORITHM = "HS256"
 
 
 def create_access_token(userId: str, role: str) -> str:
-    expire = datetime.utcnow() + timedelta(
-        days=settings.JWT_EXPIRE_IN_DAYS)
+    expire = datetime.utcnow() + timedelta(days=settings.JWT_EXPIRE_IN_DAYS)
     to_encode = {
         "exp": expire,
         "sub": userId,

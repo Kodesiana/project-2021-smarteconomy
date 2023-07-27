@@ -30,6 +30,7 @@ app.add_middleware(
     ],
 )
 
+
 # home route
 @app.get("/")
 async def root():

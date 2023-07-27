@@ -252,9 +252,10 @@ async def information_chart(db: Session = Depends(get_db),
 
     return data
 
+
 @router.get("/pls-nn-chart", response_model=list[PLSNNModel])
 async def pls_nn_chart(db: Session = Depends(get_db),
-                        _: dict[str, str] = Depends(get_jwt_user)):
+                       _: dict[str, str] = Depends(get_jwt_user)):
     # build query
     query = db.execute(
         select(QuestionnaireAnswer.json_content, Village.name) \
@@ -263,7 +264,8 @@ async def pls_nn_chart(db: Session = Depends(get_db),
 
     # load into dataframe
     df_raw = pd.DataFrame(query)
-    df_values = pd.DataFrame([json.loads(answer.json_content) for answer in query])
+    df_values = pd.DataFrame(
+        [json.loads(answer.json_content) for answer in query])
     count = len(df_raw)
 
     # summarize each features
@@ -279,7 +281,10 @@ async def pls_nn_chart(db: Session = Depends(get_db),
     ct = pd.crosstab(df["desa"], df["rank"]).reset_index()
 
     # column mapping
-    col_mapping = {**{k:f"rank_{k}" for k in range(1, 6)}, "desa": "village_name"}
+    col_mapping = {
+        **{k: f"rank_{k}"
+           for k in range(1, 6)}, "desa": "village_name"
+    }
     ct = ct.rename(columns=col_mapping)
 
     # normalize

@@ -62,6 +62,7 @@ class InformationModel(BaseModel):
     pemda_pusat: int = 0
     lainnya: int = 0
 
+
 class PLSNNModel(BaseModel):
     village_name: str
     rank_1: float
