@@ -1,11 +1,12 @@
 import re
+import json
 
 import numpy as np
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from lime.lime_tabular import LimeTabularExplainer
 
-from app.models import RecommendationFactors
+from app.models import RecommendationFactors, SynthesisInfrastructure, SynthesisCitizenScience
 from app.api.analysis.dto import RecommendationItem, RecommendationDto
 
 FEATURE_NAMES = [
@@ -44,9 +45,72 @@ def get_rank(villageId: str, df: pd.DataFrame):
     return rank
 
 
-def rec_quartile(villageId: str, model: list[RecommendationFactors]) -> RecommendationDto:
+def infra_to_dict(infra: SynthesisInfrastructure) -> dict[str, str]:
+    return {
+        "pasar": infra.market,
+        "panjang jalan": infra.roads,
+        "sebaran sekolah": infra.schools,
+        "internet": infra.internet,
+        "aktivitas medsos": infra.social_media,
+        "irigasi": infra.irrigation,
+        "bank": infra.banks,
+        "koperasi": infra.cooperation,
+        "UMKM": infra.umkm,
+        "komunitas literasi, TIK, sosial, lingkungan": infra.community,
+        "adat": infra.tradition,
+        "kerja sama universitas": infra.university,
+        "regulasi": infra.regulation,
+    }
+
+
+def list_string_join(l: list[str]) -> str:
+    return ", ".join(l[:-1]) + " dan " + l[-1]
+
+
+def make_recommendation_description(cs: SynthesisCitizenScience,
+                                    coop: list[RecommendationItem],
+                                    infra: SynthesisInfrastructure):
+    text = "<b>Kesiapan warga</b><br>"
+
+    # kesiapan warga
+    cs_json = json.loads(cs.json_result)
+    cs_1 = []
+    cs_2 = []
+    cs_3 = []
+    for isum in cs_json["inner_summary"]:
+        if isum["r_squared"] < 0.1:
+            cs_1.append(isum["index"].lower().replace("_", " "))
+        elif isum["r_squared"] <= 0.4:
+            cs_2.append(isum["index"].lower().replace("_", " "))
+        else:
+            cs_3.append(isum["index"].lower().replace("_", " "))
+
+    text += "Segera lakukan penguatan peran " + list_string_join(cs_1) + ". "
+    text += "Lakukan penguatan peran " + list_string_join(cs_2) + ". "
+    text += "Pertahankan peran " + list_string_join(cs_3) + ". "
+
+    # kerja sama
+    coop_best = max(coop, key=lambda x: x.value).variable.lower()
+    coop_poor = min(coop, key=lambda x: x.value).variable.lower()
+
+    text += "<br><br><b>Kerja Sama</b><br>"
+    text += f"Lakukan peningkatan {coop_best} untuk memperkuat {coop_poor}. "
+
+    # infrastruktur
+    infra_dict = infra_to_dict(infra)
+    infra_better = [k for k, v in infra_dict.items() if v == 1]
+
+    text += "<br><br><b>Infrastruktur</b><br>"
+    text += "Lakukan penguatan " + list_string_join(infra_better) + ". "
+
+    return text
+
+
+def rec_quartile(villageId: str, coop: list[RecommendationFactors],
+                 cs: SynthesisCitizenScience,
+                 infra: SynthesisInfrastructure) -> RecommendationDto:
     # load into dataframe
-    df = pd.DataFrame([vars(x) for x in model])
+    df = pd.DataFrame([vars(x) for x in coop])
 
     # scale down the g1 variable by dividing by 3
     df["g1"] = df["g1"] / 3
@@ -84,7 +148,12 @@ def rec_quartile(villageId: str, model: list[RecommendationFactors]) -> Recommen
     items.sort(key=lambda x: x.value)
 
     # return data
-    return RecommendationDto(rank=rank, threshold=threshold, items=items, description="TODO")
+    print(coop)
+    return RecommendationDto(rank=rank,
+                             threshold=threshold,
+                             items=items,
+                             description=make_recommendation_description(
+                                 cs, items, infra))
 
 
 def rec_ime(villageId: str,
@@ -157,4 +226,7 @@ def rec_ime(villageId: str,
     ]
 
     # return data
-    return RecommendationDto(rank=rank, threshold=0, items=items, description="TODO")
+    return RecommendationDto(rank=rank,
+                             threshold=0,
+                             items=items,
+                             description="TODO")

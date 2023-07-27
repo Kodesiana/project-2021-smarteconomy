@@ -146,15 +146,28 @@ async def recommendation_statistics(model: RecommendationModel,
                                     db: Session = Depends(get_db),
                                     _: str = Depends(get_jwt_user)):
     # load data
-    data = db.query(RecommendationFactors).all()
+    coop = db.query(RecommendationFactors).all()
+    infra = db.query(SynthesisInfrastructure) \
+        .filter(SynthesisInfrastructure.village_id == model.villageId) \
+        .first()
+    citizen_science = db.query(SynthesisCitizenScience) \
+        .filter(SynthesisCitizenScience.village_id == model.villageId) \
+        .filter(SynthesisCitizenScience.sempls_order == 2) \
+        .first()
 
     # check if data exists
-    if not data:
+    if not coop:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Data tidak ditemukan")
+                            detail="Data kerja sama tidak ditemukan")
+    if not infra:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Data infrastruktur tidak ditemukan")
+    if not citizen_science:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Data citizen science tidak ditemukan")
 
     # process data
-    return rec_quartile(model.villageId, data)
+    return rec_quartile(model.villageId, coop, citizen_science, infra)
 
 
 @router.post("/recommendation/ime")
