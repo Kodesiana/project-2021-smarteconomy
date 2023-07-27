@@ -124,7 +124,7 @@ const ModelStatsModule = () => {
             </Card>
             <Card>
               <Text size={16} weight={700} color="#495057" mb={8}>Keterangan</Text>
-              {data?.description ?? "-"}
+              <div dangerouslySetInnerHTML={{ __html: data?.description ?? "-" }} />
             </Card>
           </Stack>)}
       </SimpleGrid>

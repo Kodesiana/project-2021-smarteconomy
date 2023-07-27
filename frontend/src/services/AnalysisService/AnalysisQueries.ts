@@ -64,7 +64,7 @@ export const useGetRecommendation = (
         values.push(valueItem); 
         recommendations.push(text ?? ""); 
       });
-      return {  rank: data?.data?.rank, threshold: data?.data?.threshold, values, recommendations };
+      return {  rank: data?.data?.rank, threshold: data?.data?.threshold, values, recommendations, description: data?.data?.description };
     },
     placeholderData: {
       threshold: 0, values: {}, recommendations: []
