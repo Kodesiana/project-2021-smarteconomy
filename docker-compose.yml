@@ -12,9 +12,7 @@ services:
     cap_add:
       - SYS_NICE
     restart: always
-    environment:
-      - MYSQL_DATABASE=smart_economy
-      - MYSQL_ROOT_PASSWORD=mauFJcuf5dhRMQrjj
+    env_file: mariadb.env
     ports:
       - 3306:3306
     networks:
