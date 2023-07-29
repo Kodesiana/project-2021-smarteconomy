@@ -52,7 +52,7 @@ const X0 = ({ data }: X0Props) => {
             <Select
               {...e}
               data={handleFindData({ name: 'x0_domisili' })
-                ?.map(({ Label: label, Value: value }: any) => ({ value, label }))}
+                ?.map(({ label, value }: any) => ({ value, label }))}
               placeholder="Domisili"
             />
           )}
