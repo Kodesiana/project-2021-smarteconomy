@@ -1,5 +1,6 @@
 import json
 
+import numpy as np
 import pandas as pd
 
 from app.models import SynthesisCooperation, PROCESS_STATUS
@@ -10,6 +11,8 @@ def coop_single(model: SynthesisCooperation) -> CooperationDto:
     print(model)
     alts = json.loads(model.json_alternatives)
     factors = json.loads(model.json_factors)
+
+    fmax = np.sum([factors[f"f{i}"] for i in range(1, 6)])
 
     return CooperationDto(
         id=model.id,
@@ -25,11 +28,11 @@ def coop_single(model: SynthesisCooperation) -> CooperationDto:
             as6=alts["as6"],
         ),
         factors=CooperationFactor(
-            f1=factors["f1"],
-            f2=factors["f2"],
-            f3=factors["f3"],
-            f4=factors["f4"],
-            f5=factors["f5"],
+            f1=factors["f1"] / fmax,
+            f2=factors["f2"] / fmax,
+            f3=factors["f3"] / fmax,
+            f4=factors["f4"] / fmax,
+            f5=factors["f5"] / fmax,
         ),
     )
 
@@ -50,6 +53,7 @@ def coop_summarize(model: list[SynthesisCooperation]) -> CooperationDto:
 
     # get means
     means = df.mean()
+    fmax = np.sum([means[f"f{i}"] for i in range(1, 6)])
 
     return CooperationDto(
         id="",
@@ -65,10 +69,10 @@ def coop_summarize(model: list[SynthesisCooperation]) -> CooperationDto:
             as6=means["as6"],
         ),
         factors=CooperationFactor(
-            f1=means["f1"],
-            f2=means["f2"],
-            f3=means["f3"],
-            f4=means["f4"],
-            f5=means["f5"],
+            f1=means["f1"] / fmax,
+            f2=means["f2"] / fmax,
+            f3=means["f3"] / fmax,
+            f4=means["f4"] / fmax,
+            f5=means["f5"] / fmax,
         ),
     )

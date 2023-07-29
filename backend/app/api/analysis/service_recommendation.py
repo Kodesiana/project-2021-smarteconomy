@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from lime.lime_tabular import LimeTabularExplainer
 
-from app.models import RecommendationFactors, SynthesisInfrastructure, SynthesisCitizenScience
+from app.models import RecommendationFactors, SynthesisCitizenScience, SynthesisCooperation, SynthesisInfrastructure
 from app.api.analysis.dto import RecommendationItem, RecommendationDto
 
 FEATURE_NAMES = [
@@ -19,6 +19,19 @@ POTENTIAL_NAMES = ["Potensial", "Cukup Potensial", "Sangat Potensial"]
 
 TREE_INPUT_FEATURES = [
     "c1", "c2", "c3", "c4", "c5", "c6", "f1", "f2", "f3", "f4", "f5", "g1"
+]
+
+COOP_STRATEGIES = [
+    "Pemberdayaan Koperasi", "Pemodalan", "Pemasaran", "Character Building",
+    "Capacity Building", "Kebijakan"
+]
+
+COOP_FACTORS = [
+    "Sumber Daya",
+    "Teknologi",
+    "Rantai Nilai",
+    "Keberlanjutan",
+    "Institusi",
 ]
 
 
@@ -63,12 +76,18 @@ def infra_to_dict(infra: SynthesisInfrastructure) -> dict[str, str]:
     }
 
 
-def list_string_join(l: list[str]) -> str:
-    return ", ".join(l[:-1]) + " dan " + l[-1]
+def list_string_join(prefix: str, l: list[str]) -> str:
+    if len(l) == 0:
+        return prefix
+    elif len(l) == 1:
+        return f"{prefix} {l[0]}"
+
+    text = ", ".join(l[:-1]) + " dan " + l[-1]
+    return f"{prefix} {text}"
 
 
 def make_recommendation_description(cs: SynthesisCitizenScience,
-                                    coop: list[RecommendationItem],
+                                    coops: list[SynthesisCooperation],
                                     infra: SynthesisInfrastructure):
     text = "<b>Kesiapan warga</b><br>"
 
@@ -85,13 +104,18 @@ def make_recommendation_description(cs: SynthesisCitizenScience,
         else:
             cs_3.append(isum["index"].lower().replace("_", " "))
 
-    text += "Segera lakukan penguatan peran " + list_string_join(cs_1) + ". "
-    text += "Lakukan penguatan peran " + list_string_join(cs_2) + ". "
-    text += "Pertahankan peran " + list_string_join(cs_3) + ". "
+    text += list_string_join("Segera lakukan penguatan peran", cs_1) + ". "
+    text += list_string_join("Lakukan penguatan peran", cs_2) + ". "
+    text += list_string_join("Pertahankan peran", cs_3) + ". "
 
     # kerja sama
-    coop_best = max(coop, key=lambda x: x.value).variable.lower()
-    coop_poor = min(coop, key=lambda x: x.value).variable.lower()
+    coop_alts = np.mean(
+        [list(json.loads(coop.json_alternatives).values()) for coop in coops])
+    coop_factors = np.mean(
+        [list(json.loads(coop.json_factors).values()) for coop in coops])
+
+    coop_best = COOP_STRATEGIES[np.argmax(coop_alts)].lower()
+    coop_poor = COOP_FACTORS[np.argmin(coop_factors)].lower()
 
     text += "<br><br><b>Kerja Sama</b><br>"
     text += f"Lakukan peningkatan {coop_best} untuk memperkuat {coop_poor}. "
@@ -101,16 +125,16 @@ def make_recommendation_description(cs: SynthesisCitizenScience,
     infra_better = [k for k, v in infra_dict.items() if v == 1]
 
     text += "<br><br><b>Infrastruktur</b><br>"
-    text += "Lakukan penguatan " + list_string_join(infra_better) + ". "
+    text += list_string_join("Lakukan penguatan", infra_better) + ". "
 
     return text
 
 
-def rec_quartile(villageId: str, coop: list[RecommendationFactors],
-                 cs: SynthesisCitizenScience,
+def rec_quartile(villageId: str, rank_factors: list[RecommendationFactors],
+                 cs: SynthesisCitizenScience, coops: SynthesisCooperation,
                  infra: SynthesisInfrastructure) -> RecommendationDto:
     # load into dataframe
-    df = pd.DataFrame([vars(x) for x in coop])
+    df = pd.DataFrame([vars(x) for x in rank_factors])
 
     # scale down the g1 variable by dividing by 3
     df["g1"] = df["g1"] / 3
@@ -119,14 +143,15 @@ def rec_quartile(villageId: str, coop: list[RecommendationFactors],
     rank = get_rank(villageId, df.copy())
 
     # drop _sa_instance_state, village_id, inv1, inv2, and inv3
-    df = df.drop(
-        columns=["_sa_instance_state", "village_id", "inv1", "inv2", "inv3"])
+    df = df.drop(columns=["_sa_instance_state", "inv1", "inv2", "inv3"])
+    df = df[TREE_INPUT_FEATURES + ["village_id"]]
 
     # calculate mean of all rows
-    d = df.mean().values
+    means_all = df.mean().values
+    means_village = df[df["village_id"] == villageId].mean().values
 
     # calculate quartile
-    threshold = np.quantile(np.abs(d), [0.25])
+    threshold = np.quantile(np.abs(means_all), [0.25])
 
     # create formatter
     def getText(value, threshold, feature_name):
@@ -139,21 +164,21 @@ def rec_quartile(villageId: str, coop: list[RecommendationFactors],
     items = [
         RecommendationItem(code=f"item{i}",
                            variable=FEATURE_NAMES[i],
-                           value=d[i],
-                           text=getText(d[i], threshold, FEATURE_NAMES[i]))
-        for i in range(d.shape[0])
+                           value=means_village[i],
+                           text=getText(means_village[i], threshold,
+                                        FEATURE_NAMES[i]))
+        for i in range(means_village.shape[0])
     ]
 
     # sort by value, ascending
     items.sort(key=lambda x: x.value)
 
     # return data
-    print(coop)
     return RecommendationDto(rank=rank,
                              threshold=threshold,
                              items=items,
                              description=make_recommendation_description(
-                                 cs, items, infra))
+                                 cs, coops, infra))
 
 
 def rec_ime(villageId: str,
