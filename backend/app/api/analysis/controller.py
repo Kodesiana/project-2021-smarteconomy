@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 
 from app.api.dependencies import get_jwt_user, get_db
-from app.models import Village, SynthesisCitizenScience, SynthesisInfrastructure, SynthesisCooperation, RecommendationFactors
+from app.models import Village, SynthesisCitizenScience, SynthesisInfrastructure, SynthesisCooperation, RecommendationFactors, QuestionnaireAnswer
 
 from app.api.analysis.dto import SemplsDetailedDto, SemplsSummaryDto, SpatialScoringDto, CooperationDto, RecommendationDto
 from app.api.analysis.schemas import BackfillMode, CitizenScienceMode, CitizenScienceModel, SpatialScoringModel, CooperationModel, RecommendationModel, BackfillModel
@@ -158,6 +158,8 @@ async def recommendation_statistics(model: RecommendationModel,
     infra = db.query(SynthesisInfrastructure) \
         .filter(SynthesisInfrastructure.village_id == model.villageId) \
         .first()
+    qanswers = db.query(QuestionnaireAnswer) \
+        .all()
 
     # check if data exists
     if not rec_factors:
@@ -172,7 +174,7 @@ async def recommendation_statistics(model: RecommendationModel,
 
     # process data
     return rec_quartile(model.villageId, rec_factors, citizen_science, coop,
-                        infra)
+                        infra, qanswers)
 
 
 @router.post("/recommendation/ime")

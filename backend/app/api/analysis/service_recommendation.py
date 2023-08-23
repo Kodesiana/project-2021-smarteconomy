@@ -6,13 +6,14 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from lime.lime_tabular import LimeTabularExplainer
 
-from app.models import RecommendationFactors, SynthesisCitizenScience, SynthesisCooperation, SynthesisInfrastructure
+from app.services.pls_nn import summarize_variables
+from app.models import RecommendationFactors, SynthesisCitizenScience, SynthesisCooperation, SynthesisInfrastructure, QuestionnaireAnswer
 from app.api.analysis.dto import RecommendationItem, RecommendationDto
 
 FEATURE_NAMES = [
     "Karakter Warga", "Lingkungan", "Dukungan Komunitas", "Keberdayaan Warga",
     "Kewirausahaan", "Inovasi", "Sumber Daya", "Teknologi", "Rantai Nilai",
-    "Keberlanjutan", "Institusi", "Indeks Smart Community"
+    "Keberlanjutan", "Institusi", "Warga yang Siap"
 ]
 
 POTENTIAL_NAMES = ["Potensial", "Cukup Potensial", "Sangat Potensial"]
@@ -47,8 +48,7 @@ def get_rank(villageId: str, df: pd.DataFrame):
 
     # calculate raw score by this formula: sum(c1-c6) * inv1 + sum(f1-f5) * inv2 + g1 * inv3
     df["raw_score"] = (df["c1"] + df["c2"] + df["c3"] + df["c4"] + df["c5"] + df["c6"]) * df["inv1"] + \
-                      (df["f1"] + df["f2"] + df["f3"] + df["f4"] + df["f5"]) * df["inv2"] + \
-                      df["g1"] * df["inv3"]
+                      (df["f1"] + df["f2"] + df["f3"] + df["f4"] + df["f5"]) * df["inv2"] # + df["g1"] * df["inv3"]
 
     # use qcut from the raw_score to get the final score
     df["final_score"] = pd.qcut(df["raw_score"], 3, labels=False)
@@ -129,15 +129,47 @@ def make_recommendation_description(cs: SynthesisCitizenScience,
 
     return text
 
+def calc_warga_yang_siap(query: list[QuestionnaireAnswer]) -> float:
+    # load into dataframe
+    df_raw = pd.DataFrame([vars(x) for x in query])
+    df_values = pd.DataFrame([json.loads(answer.json_content) for answer in query])
+    count = len(df_raw)
+
+    # summarize each features
+    df = pd.DataFrame({
+        "village_id": df_raw["village_id"],
+        "smart_economy": summarize_variables(df_values, "y2"),
+    })
+
+    # calculate rank
+    df["rank"] = pd.cut(df["smart_economy"], 3, labels=[1, 2, 3])
+
+    # summarize
+    ct = pd.crosstab(df["village_id"], df["rank"]).reset_index()
+
+    # normalize
+    ct.iloc[:, 1:] = ct.iloc[:, 1:] / count * 100
+
+    # normalize
+    ct["score"] = ct.apply(lambda x: x[1] * 0.2 + x[2] * 0.3 + x[3] * 0.5, axis=1)
+    ct["score"] = ct["score"] / ct["score"].max()
+
+    return ct
+
 
 def rec_quartile(villageId: str, rank_factors: list[RecommendationFactors],
                  cs: SynthesisCitizenScience, coops: SynthesisCooperation,
-                 infra: SynthesisInfrastructure) -> RecommendationDto:
+                 infra: SynthesisInfrastructure, qanswers: list[QuestionnaireAnswer]) -> RecommendationDto:
     # load into dataframe
     df = pd.DataFrame([vars(x) for x in rank_factors])
 
     # scale down the g1 variable by dividing by 3
     df["g1"] = df["g1"] / 3
+    
+    # replace g1
+    warga_yang_siap = calc_warga_yang_siap(qanswers) 
+    df_c = df.copy().merge(warga_yang_siap, on="village_id")
+    df["g1"] = df_c["score"]
 
     # get village rank
     rank = get_rank(villageId, df.copy())
@@ -145,6 +177,10 @@ def rec_quartile(villageId: str, rank_factors: list[RecommendationFactors],
     # drop _sa_instance_state, village_id, inv1, inv2, and inv3
     df = df.drop(columns=["_sa_instance_state", "inv1", "inv2", "inv3"])
     df = df[TREE_INPUT_FEATURES + ["village_id"]]
+
+    # normalize
+    num_cols = df.select_dtypes("number").columns
+    df[num_cols] /= df[num_cols].sum()
 
     # calculate mean of all rows
     means_all = df.mean().values
